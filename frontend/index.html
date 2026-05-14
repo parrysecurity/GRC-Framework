@@ -1,0 +1,2531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GRC Risk Assessment Framework | Enterprise Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+/* =============================================
+   CSS VARIABLES & GLOBAL STYLES
+   ============================================= */
+:root {
+  --bg-main: #F0F4F8;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --accent-blue: #3B82F6;
+  --accent-blue-light: #DBEAFE;
+  --accent-blue-dark: #1D4ED8;
+  --accent-green: #10B981;
+  --accent-green-light: #D1FAE5;
+  --accent-amber: #F59E0B;
+  --accent-amber-light: #FEF3C7;
+  --accent-red: #EF4444;
+  --accent-red-light: #FEE2E2;
+  --accent-purple: #8B5CF6;
+  --accent-purple-light: #EDE9FE;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.08);
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Risk Colours */
+  --risk-low: #22C55E;
+  --risk-low-bg: #DCFCE7;
+  --risk-medium: #F59E0B;
+  --risk-medium-bg: #FEF3C7;
+  --risk-high: #F97316;
+  --risk-high-bg: #FFEDD5;
+  --risk-critical: #EF4444;
+  --risk-critical-bg: #FEE2E2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* =============================================
+   LOADER ANIMATION
+   ============================================= */
+#loader {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 50%, #FFF7ED 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#loader.hidden { opacity: 0; visibility: hidden; }
+
+.loader-shield {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--accent-blue), #6366F1);
+  border-radius: 50% 50% 40% 40%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 32px;
+  animation: shieldPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(59,130,246,0.4);
+  margin-bottom: 20px;
+}
+
+@keyframes shieldPulse {
+  0%,100% { transform: scale(1) rotateY(0deg); box-shadow: 0 0 40px rgba(59,130,246,0.4); }
+  50% { transform: scale(1.1) rotateY(180deg); box-shadow: 0 0 60px rgba(99,102,241,0.6); }
+}
+
+.loader-bar {
+  width: 200px; height: 4px;
+  background: #E2E8F0; border-radius: 99px;
+  overflow: hidden;
+}
+.loader-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+  border-radius: 99px;
+  animation: loadFill 2s ease forwards;
+}
+@keyframes loadFill { from{width:0%} to{width:100%} }
+.loader-text { margin-top: 12px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+
+/* =============================================
+   SIDEBAR NAVIGATION
+   ============================================= */
+#sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 260px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 20px;
+  box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+  animation: logoFloat 3s ease-in-out infinite;
+}
+@keyframes logoFloat {
+  0%,100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+.logo-text { display: flex; flex-direction: column; }
+.logo-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.logo-sub { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-group-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 8px 8px 6px; margin-top: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s;
+  color: var(--text-secondary); font-size: 13.5px; font-weight: 500;
+  margin-bottom: 2px; text-decoration: none;
+}
+.nav-item:hover { background: var(--bg-main); color: var(--text-primary); }
+.nav-item.active {
+  background: var(--accent-blue-light);
+  color: var(--accent-blue-dark);
+}
+.nav-item i { width: 18px; text-align: center; font-size: 14px; }
+.nav-badge {
+  margin-left: auto; font-size: 11px; font-weight: 700;
+  background: var(--accent-red); color: white;
+  border-radius: 99px; padding: 1px 7px;
+}
+.nav-badge.green { background: var(--accent-green); }
+.nav-badge.amber { background: var(--accent-amber); }
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; color: white; font-size: 14px; font-weight: 700;
+}
+.user-info { flex: 1; }
+.user-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.user-role { font-size: 11px; color: var(--text-secondary); }
+
+/* =============================================
+   MAIN CONTENT AREA
+   ============================================= */
+#main-content {
+  margin-left: 260px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+/* =============================================
+   TOP BAR
+   ============================================= */
+.topbar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex; align-items: center; gap: 16px;
+  position: sticky; top: 0; z-index: 90;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-title { flex: 1; }
+.topbar-title h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.topbar-title p { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; transition: all 0.2s; font-family: 'Outfit', sans-serif;
+}
+.btn-primary {
+  background: var(--accent-blue); color: white;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+}
+.btn-primary:hover { background: var(--accent-blue-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.4); }
+.btn-outline {
+  background: white; color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--accent-blue-light); }
+.btn-success { background: var(--accent-green); color: white; }
+.btn-success:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-danger { background: var(--accent-red); color: white; }
+.btn-danger:hover { opacity: 0.9; }
+
+/* Menu toggle */
+.menu-toggle {
+  display: none; background: none; border: none;
+  font-size: 20px; cursor: pointer; color: var(--text-primary);
+  padding: 6px;
+}
+
+/* =============================================
+   SECTIONS
+   ============================================= */
+.section { padding: 32px; display: none; animation: fadeInUp 0.4s ease; }
+.section.active { display: block; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.section-icon {
+  width: 44px; height: 44px;
+  background: var(--accent-blue-light);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-blue); font-size: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.section-title { flex: 1; }
+.section-title h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); }
+.section-title p { font-size: 13.5px; color: var(--text-secondary); margin-top: 2px; }
+
+/* =============================================
+   CARDS
+   ============================================= */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+  overflow: hidden;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); flex: 1; }
+.card-body { padding: 22px; }
+
+/* =============================================
+   1. DASHBOARD SUMMARY CARDS
+   ============================================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  cursor: default;
+  transform-style: preserve-3d;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-6px) rotateX(2deg);
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.blue::before { background: linear-gradient(90deg, #3B82F6, #6366F1); }
+.stat-card.red::before { background: linear-gradient(90deg, #EF4444, #F97316); }
+.stat-card.amber::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.stat-card.green::before { background: linear-gradient(90deg, #10B981, #22C55E); }
+.stat-card.purple::before { background: linear-gradient(90deg, #8B5CF6, #EC4899); }
+
+.stat-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.stat-card.blue .stat-icon { background: var(--accent-blue-light); color: var(--accent-blue); }
+.stat-card.red .stat-icon { background: var(--accent-red-light); color: var(--accent-red); }
+.stat-card.amber .stat-icon { background: var(--accent-amber-light); color: var(--accent-amber); }
+.stat-card.green .stat-icon { background: var(--accent-green-light); color: var(--accent-green); }
+.stat-card.purple .stat-icon { background: var(--accent-purple-light); color: var(--accent-purple); }
+
+.stat-trend {
+  font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 99px; display: flex; align-items: center; gap: 4px;
+}
+.stat-trend.up { background: #FEE2E2; color: var(--accent-red); }
+.stat-trend.down { background: var(--accent-green-light); color: var(--accent-green); }
+.stat-trend.stable { background: #EDE9FE; color: var(--accent-purple); }
+
+.stat-value {
+  font-size: 40px; font-weight: 800; color: var(--text-primary);
+  margin-top: 12px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+.stat-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; }
+
+/* Mini sparkline */
+.sparkline { margin-top: 12px; display: flex; align-items: flex-end; gap: 3px; height: 28px; }
+.spark-bar {
+  flex: 1; border-radius: 3px;
+  transition: height 0.3s;
+  opacity: 0.7;
+}
+.stat-card.blue .spark-bar { background: var(--accent-blue); }
+.stat-card.red .spark-bar { background: var(--accent-red); }
+.stat-card.amber .spark-bar { background: var(--accent-amber); }
+.stat-card.green .spark-bar { background: var(--accent-green); }
+
+/* =============================================
+   2. RISK HEAT MAP / MATRIX
+   ============================================= */
+.heatmap-container {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  align-items: flex-start;
+}
+.heatmap-wrapper {
+  flex: 1; min-width: 320px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.matrix-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; }
+
+.matrix-outer { position: relative; }
+.matrix-y-label {
+  position: absolute; left: -32px; top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 1px;
+  white-space: nowrap;
+}
+.matrix-x-label {
+  text-align: center; margin-top: 8px;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+.matrix-grid {
+  display: grid; grid-template-columns: 80px repeat(5, 1fr);
+  gap: 3px; margin-left: 20px;
+}
+.matrix-col-header {
+  text-align: center; padding: 6px 2px;
+  font-size: 9.5px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  display: flex; align-items: center; justify-content: center;
+}
+.matrix-row-header {
+  font-size: 9.5px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.3px;
+  display: flex; align-items: center;
+  padding-right: 8px; text-align: right; justify-content: flex-end;
+  line-height: 1.2;
+}
+.matrix-cell {
+  aspect-ratio: 1; border-radius: 6px;
+  position: relative; cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.4);
+  transform-style: preserve-3d;
+  min-height: 56px;
+}
+.matrix-cell:hover {
+  transform: scale(1.12) translateZ(8px);
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+/* Heat map color scale */
+.cell-1  { background: #DCFCE7; }
+.cell-2  { background: #BBF7D0; }
+.cell-3  { background: #86EFAC; }
+.cell-4  { background: #86EFAC; }
+.cell-5  { background: #FEF9C3; }
+.cell-6  { background: #FEF9C3; }
+.cell-7  { background: #FEF08A; }
+.cell-8  { background: #FDE047; }
+.cell-9  { background: #FACC15; }
+.cell-10 { background: #FED7AA; }
+.cell-11 { background: #FDBA74; }
+.cell-12 { background: #FB923C; }
+.cell-13 { background: #F97316; }
+.cell-14 { background: #FCA5A5; }
+.cell-15 { background: #F87171; }
+.cell-16 { background: #EF4444; }
+.cell-17 { background: #DC2626; }
+.cell-18 { background: #B91C1C; }
+.cell-19 { background: #991B1B; }
+.cell-20 { background: #7F1D1D; color:rgba(255,255,255,0.6); }
+
+/* Risk dots on heatmap */
+.risk-dot {
+  position: absolute;
+  width: 22px; height: 22px;
+  background: rgba(30,41,59,0.85);
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 9px; font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 5;
+}
+.risk-dot:hover {
+  transform: scale(1.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+
+/* Legend */
+.matrix-legend { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+.legend-low { background: #86EFAC; }
+.legend-medium { background: #FACC15; }
+.legend-high { background: #FB923C; }
+.legend-critical { background: #EF4444; }
+
+/* Risk plot panel */
+.heatmap-side { width: 280px; }
+.risk-plot-list { display: flex; flex-direction: column; gap: 8px; }
+.risk-plot-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  transition: all 0.2s; cursor: pointer;
+}
+.risk-plot-item:hover { border-color: var(--accent-blue); box-shadow: var(--shadow-md); transform: translateX(4px); }
+.rp-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--text-primary); color: white;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.rp-info { flex: 1; }
+.rp-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.rp-cat { font-size: 11px; color: var(--text-secondary); }
+.rp-score {
+  font-size: 12px; font-weight: 800; padding: 3px 9px;
+  border-radius: 99px;
+}
+
+/* =============================================
+   3. RISK REGISTER TABLE
+   ============================================= */
+.table-controls {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.search-box {
+  flex: 1; min-width: 200px;
+  padding: 9px 14px 9px 36px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13.5px;
+  color: var(--text-primary); background: var(--bg-card);
+  outline: none; transition: border-color 0.2s;
+}
+.search-box:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.search-wrapper { position: relative; flex: 1; min-width: 200px; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+
+.filter-select {
+  padding: 9px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+  font-size: 13px; color: var(--text-primary);
+  background: var(--bg-card); outline: none; cursor: pointer;
+}
+.filter-select:focus { border-color: var(--accent-blue); }
+
+.table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-card); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--bg-main); }
+thead th {
+  padding: 13px 14px; text-align: left;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+  cursor: pointer; user-select: none;
+  transition: color 0.2s;
+}
+thead th:hover { color: var(--accent-blue); }
+thead th .sort-icon { margin-left: 4px; opacity: 0.5; font-size: 10px; }
+tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: #F8FAFC; }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 13px 14px; color: var(--text-primary); vertical-align: middle; }
+
+.risk-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  color: var(--accent-blue);
+  background: var(--accent-blue-light);
+  padding: 3px 8px; border-radius: 5px;
+  display: inline-block;
+}
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 11.5px; font-weight: 600;
+}
+.badge-low { background: var(--risk-low-bg); color: #166534; }
+.badge-medium { background: var(--risk-medium-bg); color: #92400E; }
+.badge-high { background: var(--risk-high-bg); color: #9A3412; }
+.badge-critical { background: var(--risk-critical-bg); color: #991B1B; }
+.badge-blue { background: var(--accent-blue-light); color: var(--accent-blue-dark); }
+.badge-purple { background: var(--accent-purple-light); color: #5B21B6; }
+.badge-green { background: var(--accent-green-light); color: #065F46; }
+.badge-amber { background: var(--accent-amber-light); color: #78350F; }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600;
+}
+.status-badge::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+}
+.status-open { background: #FEE2E2; color: #991B1B; }
+.status-open::before { background: #EF4444; animation: blink 1.5s infinite; }
+.status-inprogress { background: #FEF3C7; color: #92400E; }
+.status-inprogress::before { background: #F59E0B; animation: blink 2s infinite; }
+.status-monitored { background: var(--accent-blue-light); color: var(--accent-blue-dark); }
+.status-monitored::before { background: var(--accent-blue); }
+.status-closed { background: var(--accent-green-light); color: #065F46; }
+.status-closed::before { background: var(--accent-green); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.score-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.treatment-badge {
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.treat-mitigate { background: #DBEAFE; color: #1D4ED8; }
+.treat-transfer { background: #EDE9FE; color: #5B21B6; }
+.treat-accept { background: #D1FAE5; color: #065F46; }
+.treat-avoid { background: #FEE2E2; color: #991B1B; }
+
+.progress-bar { height: 6px; background: #F1F5F9; border-radius: 99px; overflow: hidden; min-width: 60px; }
+.progress-fill { height: 100%; border-radius: 99px; }
+
+.action-btns { display: flex; gap: 6px; }
+.action-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; transition: all 0.2s;
+}
+.action-btn.view { background: var(--accent-blue-light); color: var(--accent-blue); }
+.action-btn.edit { background: var(--accent-amber-light); color: var(--accent-amber); }
+.action-btn.delete { background: var(--accent-red-light); color: var(--accent-red); }
+.action-btn:hover { transform: scale(1.15); }
+
+/* =============================================
+   4. THREAT LANDSCAPE TABLE
+   ============================================= */
+.threat-source-badge {
+  padding: 3px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 600;
+}
+.ts-internal { background: #FEF3C7; color: #78350F; }
+.ts-external { background: #FEE2E2; color: #991B1B; }
+.ts-both { background: var(--accent-purple-light); color: #5B21B6; }
+
+.threat-type-icon { margin-right: 5px; }
+
+/* =============================================
+   5. RISK TREATMENT REGISTER
+   ============================================= */
+.treatment-cards { display: flex; flex-direction: column; gap: 16px; }
+.treatment-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); transition: all 0.3s;
+  transform-style: preserve-3d;
+}
+.treatment-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.treatment-card-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer; user-select: none;
+}
+.treatment-card-body { padding: 20px; display: none; }
+.treatment-card-body.open { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.treatment-field label { font-size: 10.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; display: block; }
+.treatment-field p { font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.5; }
+.cost-indicator { display: flex; gap: 4px; }
+.cost-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cost-dot.filled { background: var(--accent-blue); }
+.cost-dot.empty { background: var(--border); }
+
+.kpi-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.kpi-bar { flex: 1; height: 8px; background: #F1F5F9; border-radius: 99px; overflow: hidden; }
+.kpi-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #3B82F6, #10B981); transition: width 1s ease; }
+.kpi-pct { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+
+.chevron { margin-left: auto; transition: transform 0.3s; color: var(--text-muted); }
+.chevron.open { transform: rotate(180deg); }
+
+/* =============================================
+   6. RISK RATING CALCULATOR
+   ============================================= */
+.calculator-wrapper {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.calc-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 32px;
+  box-shadow: var(--shadow-md);
+}
+.calc-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; display: block; }
+
+.slider-group { margin-bottom: 24px; }
+.slider-value-display {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+.slider-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.slider-val {
+  font-size: 20px; font-weight: 800; color: var(--accent-blue);
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--accent-blue-light); padding: 2px 10px; border-radius: 8px;
+  min-width: 40px; text-align: center;
+}
+
+input[type="range"] {
+  width: 100%; height: 6px; border-radius: 99px;
+  appearance: none; -webkit-appearance: none;
+  background: var(--border); outline: none; cursor: pointer;
+  transition: background 0.3s;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none; -webkit-appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-blue);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+  cursor: pointer; transition: transform 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.slider-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+.slider-labels span { font-size: 10px; color: var(--text-muted); }
+
+/* Result card */
+.calc-result {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 32px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md); text-align: center;
+  position: relative; overflow: hidden;
+}
+.calc-result::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 70%);
+}
+.result-formula {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px; font-weight: 700; color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.result-score-ring {
+  width: 140px; height: 140px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 8px solid;
+  margin: 8px auto 16px;
+  transition: all 0.6s ease;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: ringPop 0.4s ease;
+}
+@keyframes ringPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.result-score-ring .score-num {
+  font-size: 46px; font-weight: 800; line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+.result-score-ring .score-max { font-size: 14px; color: var(--text-muted); }
+.result-rating-label {
+  font-size: 24px; font-weight: 800;
+  padding: 6px 20px; border-radius: 10px;
+  margin-bottom: 12px;
+  transition: all 0.4s;
+}
+.result-recommendation {
+  font-size: 13.5px; color: var(--text-secondary);
+  background: var(--bg-main); border-radius: 10px;
+  padding: 14px 18px; line-height: 1.6;
+  border: 1px solid var(--border); width: 100%;
+  transition: all 0.4s;
+}
+.result-action-btns { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+
+/* Risk matrix 3x3 mini reference in calculator */
+.mini-matrix { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-top: 20px; }
+.mini-cell {
+  height: 24px; border-radius: 4px; position: relative;
+  transition: opacity 0.3s;
+}
+.mini-cell.dim { opacity: 0.3; }
+.mini-cell.highlight {
+  box-shadow: 0 0 0 3px rgba(30,41,59,0.6);
+  opacity: 1 !important;
+  transform: scale(1.1);
+  z-index: 2;
+}
+
+/* =============================================
+   7. DOCUMENTATION SECTION
+   ============================================= */
+.docs-grid { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+.docs-toc {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  box-shadow: var(--shadow-sm); height: fit-content;
+  position: sticky; top: 80px;
+}
+.toc-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.toc-list li a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 7px;
+  font-size: 13px; color: var(--text-secondary); text-decoration: none;
+  transition: all 0.2s; font-weight: 500;
+}
+.toc-list li a:hover { background: var(--accent-blue-light); color: var(--accent-blue); }
+.toc-list li a i { width: 16px; text-align: center; font-size: 12px; }
+
+.docs-content { display: flex; flex-direction: column; gap: 20px; }
+.doc-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.doc-section-header {
+  padding: 18px 22px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, #F8FAFC, var(--bg-card));
+}
+.doc-section-header h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.doc-section-body { padding: 22px; }
+.doc-section-body p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 12px; }
+.doc-section-body h4 { font-size: 13px; font-weight: 700; color: var(--text-primary); margin: 16px 0 8px; }
+.doc-section-body ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.doc-section-body ul li {
+  font-size: 13.5px; color: var(--text-secondary);
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.6;
+}
+.doc-section-body ul li::before { content: '→'; color: var(--accent-blue); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+.methodology-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.methodology-table th { padding: 10px 14px; text-align: left; background: var(--bg-main); font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+.methodology-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+
+.approval-workflow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-top: 16px; }
+.workflow-step {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 1; min-width: 100px; padding: 16px 8px;
+  background: var(--bg-main); border-radius: 10px; text-align: center;
+}
+.workflow-step i { font-size: 20px; }
+.workflow-step span { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+.workflow-arrow { font-size: 18px; color: var(--text-muted); padding: 0 4px; }
+
+/* =============================================
+   MODAL
+   ============================================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
+  z-index: 1000; display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal {
+  background: var(--bg-card); border-radius: var(--radius-xl);
+  width: 100%; max-width: 600px; max-height: 85vh;
+  overflow-y: auto; box-shadow: var(--shadow-xl);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; background: var(--bg-card); z-index: 1;
+}
+.modal-header h3 { flex: 1; font-size: 17px; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg-main); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 15px; transition: all 0.2s;
+}
+.modal-close:hover { background: var(--accent-red-light); color: var(--accent-red); }
+.modal-body { padding: 24px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.detail-field { display: flex; flex-direction: column; gap: 4px; }
+.detail-field label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+.detail-field span { font-size: 13.5px; color: var(--text-primary); font-weight: 500; }
+.detail-field.full { grid-column: 1 / -1; }
+
+/* =============================================
+   TOAST NOTIFICATION
+   ============================================= */
+#toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 2000; display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--text-primary); color: white;
+  padding: 12px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.35s ease;
+  pointer-events: all;
+}
+@keyframes toastIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+.toast.success { background: var(--accent-green); }
+.toast.error { background: var(--accent-red); }
+.toast.warning { background: var(--accent-amber); }
+.toast.info { background: var(--accent-blue); }
+.toast-out { animation: toastOut 0.3s ease forwards; }
+@keyframes toastOut { to{transform:translateX(110%);opacity:0} }
+
+/* =============================================
+   PRINT BUTTON / EXPORT
+   ============================================= */
+.export-panel {
+  background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 24px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.export-panel p { flex: 1; font-size: 13.5px; color: var(--text-secondary); }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 900px) {
+  #sidebar { transform: translateX(-260px); }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #main-content { margin-left: 0; }
+  .menu-toggle { display: flex; }
+  .calculator-wrapper { grid-template-columns: 1fr; }
+  .docs-grid { grid-template-columns: 1fr; }
+  .docs-toc { position: static; }
+  .heatmap-side { width: 100%; }
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .section { padding: 16px; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+
+/* =============================================
+   SCROLLBAR STYLING
+   ============================================= */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* =============================================
+   3D FLOAT ANIMATION FOR CARDS
+   ============================================= */
+.card-3d {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+.card-3d:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-1deg) translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Page header banner */
+.page-banner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+  border: 1px solid #DBEAFE;
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 16px;
+  position: relative; overflow: hidden;
+}
+.page-banner::after {
+  content: '';
+  position: absolute; right: -20px; top: -20px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(59,130,246,0.12), transparent);
+  border-radius: 50%;
+}
+.banner-icon { font-size: 36px; }
+.banner-text h2 { font-size: 19px; font-weight: 800; color: var(--text-primary); }
+.banner-text p { font-size: 13.5px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Stats ring */
+.risk-ring-chart {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.ring-svg-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+.ring-svg-wrap svg { transform: rotate(-90deg); }
+.ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 22px; color: var(--text-primary);
+}
+.ring-center span { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+.ring-legend { display: flex; flex-direction: column; gap: 8px; }
+.ring-legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.ring-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+</style>
+</head>
+<body>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div class="loader-shield"><i class="fa-solid fa-shield-halved"></i></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <p class="loader-text">Loading GRC Risk Framework…</p>
+</div>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="logo-text">
+      <span class="logo-title">RiskGuard Pro</span>
+      <span class="logo-sub">GRC Enterprise Platform</span>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-group-label">Overview</div>
+    <a class="nav-item active" onclick="showSection('dashboard',this)">
+      <i class="fa-solid fa-gauge-high"></i> Dashboard
+    </a>
+    <a class="nav-item" onclick="showSection('heatmap',this)">
+      <i class="fa-solid fa-fire-flame-curved"></i> Risk Heat Map
+    </a>
+
+    <div class="nav-group-label">Risk Management</div>
+    <a class="nav-item" onclick="showSection('register',this)">
+      <i class="fa-solid fa-table-list"></i> Risk Register
+      <span class="nav-badge">8</span>
+    </a>
+    <a class="nav-item" onclick="showSection('threats',this)">
+      <i class="fa-solid fa-bug"></i> Threat Landscape
+      <span class="nav-badge amber">6</span>
+    </a>
+    <a class="nav-item" onclick="showSection('treatment',this)">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Treatment Register
+    </a>
+
+    <div class="nav-group-label">Tools</div>
+    <a class="nav-item" onclick="showSection('calculator',this)">
+      <i class="fa-solid fa-calculator"></i> Risk Calculator
+    </a>
+
+    <div class="nav-group-label">Governance</div>
+    <a class="nav-item" onclick="showSection('documentation',this)">
+      <i class="fa-solid fa-book-open"></i> Documentation
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar">JD</div>
+    <div class="user-info">
+      <div class="user-name">James Davidson</div>
+      <div class="user-role">Chief Risk Officer</div>
+    </div>
+    <i class="fa-solid fa-ellipsis-vertical" style="color:var(--text-muted);cursor:pointer;padding:4px;"></i>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div id="main-content">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+    <div class="topbar-title">
+      <h2 id="topbar-title-text">Dashboard Overview</h2>
+      <p id="topbar-sub-text">Q2 2025 • Last updated: 14 May 2025 • Quarterly Review Cycle</p>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="printReport()"><i class="fa-solid fa-print"></i> Print</button>
+      <button class="btn btn-outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export</button>
+      <button class="btn btn-primary" onclick="showToast('New risk entry form coming soon!','info')"><i class="fa-solid fa-plus"></i> Add Risk</button>
+    </div>
+  </div>
+
+  <!-- =============================================
+       SECTION 1: DASHBOARD
+       ============================================= -->
+  <section class="section active" id="sec-dashboard">
+
+    <div class="page-banner">
+      <div class="banner-icon">📊</div>
+      <div class="banner-text">
+        <h2>GRC Risk Assessment Dashboard — Q2 2025</h2>
+        <p>Enterprise-wide risk visibility across Operational, Cyber, Strategic, Financial & Compliance domains</p>
+      </div>
+      <button class="btn btn-primary" onclick="showSection('calculator',document.querySelector('[onclick*=calculator]'))">
+        <i class="fa-solid fa-calculator"></i> Quick Score
+      </button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="dashboard-grid">
+
+      <div class="stat-card blue card-3d">
+        <div class="stat-card-top">
+          <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +2</div>
+        </div>
+        <div class="stat-value counter" data-target="18">0</div>
+        <div class="stat-label">Total Risks Identified</div>
+        <div class="stat-sub">8 in register · 10 in watchlist</div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:40%"></div>
+          <div class="spark-bar" style="height:55%"></div>
+          <div class="spark-bar" style="height:45%"></div>
+          <div class="spark-bar" style="height:70%"></div>
+          <div class="spark-bar" style="height:60%"></div>
+          <div class="spark-bar" style="height:80%"></div>
+          <div class="spark-bar" style="height:75%"></div>
+          <div class="spark-bar" style="height:95%"></div>
+        </div>
+      </div>
+
+      <div class="stat-card red card-3d">
+        <div class="stat-card-top">
+          <div class="stat-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +1</div>
+        </div>
+        <div class="stat-value counter" data-target="3">0</div>
+        <div class="stat-label">Critical Risks</div>
+        <div class="stat-sub">Score 17–25 · Immediate action required</div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:30%"></div>
+          <div class="spark-bar" style="height:30%"></div>
+          <div class="spark-bar" style="height:50%"></div>
+          <div class="spark-bar" style="height:40%"></div>
+          <div class="spark-bar" style="height:60%"></div>
+          <div class="spark-bar" style="height:70%"></div>
+          <div class="spark-bar" style="height:75%"></div>
+          <div class="spark-bar" style="height:95%"></div>
+        </div>
+      </div>
+
+      <div class="stat-card amber card-3d">
+        <div class="stat-card-top">
+          <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
+          <div class="stat-trend stable"><i class="fa-solid fa-equals"></i> Same</div>
+        </div>
+        <div class="stat-value counter" data-target="11">0</div>
+        <div class="stat-label">Open Treatment Actions</div>
+        <div class="stat-sub">5 overdue · 6 on schedule</div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:90%"></div>
+          <div class="spark-bar" style="height:85%"></div>
+          <div class="spark-bar" style="height:80%"></div>
+          <div class="spark-bar" style="height:70%"></div>
+          <div class="spark-bar" style="height:75%"></div>
+          <div class="spark-bar" style="height:60%"></div>
+          <div class="spark-bar" style="height:65%"></div>
+          <div class="spark-bar" style="height:60%"></div>
+        </div>
+      </div>
+
+      <div class="stat-card green card-3d">
+        <div class="stat-card-top">
+          <div class="stat-icon"><i class="fa-solid fa-shield-check"></i></div>
+          <div class="stat-trend down"><i class="fa-solid fa-arrow-trend-down"></i> -3</div>
+        </div>
+        <div class="stat-value counter" data-target="5">0</div>
+        <div class="stat-label">Risks Closed This Quarter</div>
+        <div class="stat-sub">Residual risk accepted · Controls verified</div>
+        <div class="sparkline">
+          <div class="spark-bar" style="height:20%"></div>
+          <div class="spark-bar" style="height:30%"></div>
+          <div class="spark-bar" style="height:35%"></div>
+          <div class="spark-bar" style="height:50%"></div>
+          <div class="spark-bar" style="height:60%"></div>
+          <div class="spark-bar" style="height:75%"></div>
+          <div class="spark-bar" style="height:80%"></div>
+          <div class="spark-bar" style="height:90%"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RISK DISTRIBUTION RING + CATEGORY BREAKDOWN -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" class="responsive-grid-2">
+
+      <div class="card card-3d">
+        <div class="card-header">
+          <i class="fa-solid fa-chart-pie" style="color:var(--accent-blue)"></i>
+          <h3>Risk Distribution by Rating</h3>
+        </div>
+        <div class="card-body">
+          <div class="risk-ring-chart">
+            <div class="ring-svg-wrap">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <!-- Critical: 3/18 = 16.7% → circumference 251.3 → stroke-dasharray = 41.9 -->
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" stroke-width="12"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" stroke-width="12"
+                  stroke-dasharray="41.9 209.4" stroke-dashoffset="0" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#F97316" stroke-width="12"
+                  stroke-dasharray="55.8 195.5" stroke-dashoffset="-41.9" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#FACC15" stroke-width="12"
+                  stroke-dasharray="83.8 167.5" stroke-dashoffset="-97.7" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#22C55E" stroke-width="12"
+                  stroke-dasharray="69.8 181.5" stroke-dashoffset="-181.5" stroke-linecap="round"/>
+              </svg>
+              <div class="ring-center">18<span>Risks</span></div>
+            </div>
+            <div class="ring-legend">
+              <div class="ring-legend-item"><div class="ring-legend-dot" style="background:#EF4444"></div>Critical — 3 (17%)</div>
+              <div class="ring-legend-item"><div class="ring-legend-dot" style="background:#F97316"></div>High — 4 (22%)</div>
+              <div class="ring-legend-item"><div class="ring-legend-dot" style="background:#FACC15"></div>Medium — 6 (33%)</div>
+              <div class="ring-legend-item"><div class="ring-legend-dot" style="background:#22C55E"></div>Low — 5 (28%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-3d">
+        <div class="card-header">
+          <i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i>
+          <h3>Risk by Category</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div id="cat-bars"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="card">
+      <div class="card-header">
+        <i class="fa-solid fa-bolt" style="color:var(--accent-amber)"></i>
+        <h3>Quick Actions & Alerts</h3>
+      </div>
+      <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showSection('register',document.querySelectorAll('.nav-item')[2])">
+          <i class="fa-solid fa-table-list" style="color:var(--accent-blue)"></i> View Full Risk Register
+        </button>
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showSection('calculator',document.querySelectorAll('.nav-item')[5])">
+          <i class="fa-solid fa-calculator" style="color:var(--accent-green)"></i> Open Risk Calculator
+        </button>
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showToast('Generating Q2 2025 PDF Report…','info')">
+          <i class="fa-solid fa-file-pdf" style="color:var(--accent-red)"></i> Generate PDF Report
+        </button>
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showToast('Sending review notifications to owners…','success')">
+          <i class="fa-solid fa-bell" style="color:var(--accent-amber)"></i> Notify Risk Owners
+        </button>
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showSection('heatmap',document.querySelectorAll('.nav-item')[1])">
+          <i class="fa-solid fa-fire" style="color:var(--accent-red)"></i> Open Heat Map
+        </button>
+        <button class="btn btn-outline" style="justify-content:flex-start;padding:14px;" onclick="showSection('documentation',document.querySelectorAll('.nav-item')[6])">
+          <i class="fa-solid fa-book" style="color:var(--accent-purple)"></i> View Documentation
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =============================================
+       SECTION 2: HEAT MAP
+       ============================================= -->
+  <section class="section" id="sec-heatmap">
+    <div class="section-header">
+      <div class="section-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
+      <div class="section-title">
+        <h2>Risk Assessment Matrix — Heat Map</h2>
+        <p>5×5 Likelihood vs Impact matrix with plotted enterprise risks</p>
+      </div>
+    </div>
+
+    <div class="heatmap-container">
+      <div class="heatmap-wrapper">
+        <p class="matrix-title"><i class="fa-solid fa-grid-2" style="color:var(--accent-blue);margin-right:6px;"></i>Risk Heat Map Matrix</p>
+
+        <div class="matrix-outer" style="padding-left:40px;">
+          <div class="matrix-y-label" style="left:-10px">LIKELIHOOD →</div>
+          <div class="matrix-grid" id="heatmap-grid"></div>
+          <div class="matrix-x-label">IMPACT →</div>
+        </div>
+
+        <div class="matrix-legend">
+          <div class="legend-item"><div class="legend-dot legend-low"></div>Low (1–4)</div>
+          <div class="legend-item"><div class="legend-dot legend-medium"></div>Medium (5–9)</div>
+          <div class="legend-item"><div class="legend-dot legend-high"></div>High (10–16)</div>
+          <div class="legend-item"><div class="legend-dot legend-critical"></div>Critical (17–25)</div>
+        </div>
+      </div>
+
+      <div class="heatmap-side">
+        <div class="card" style="padding:18px;">
+          <p style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">
+            <i class="fa-solid fa-map-pin" style="color:var(--accent-red);margin-right:6px;"></i>Plotted Risks
+          </p>
+          <div class="risk-plot-list" id="risk-plot-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SECTION 3: RISK REGISTER
+       ============================================= -->
+  <section class="section" id="sec-register">
+    <div class="section-header">
+      <div class="section-icon"><i class="fa-solid fa-table-list"></i></div>
+      <div class="section-title">
+        <h2>Enterprise Risk Register</h2>
+        <p>Comprehensive log of identified risks with ratings, controls, and treatment decisions</p>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('Risk form opened!','info')">
+        <i class="fa-solid fa-plus"></i> Add Risk
+      </button>
+    </div>
+
+    <div class="table-controls">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input class="search-box" type="text" placeholder="Search risks…" oninput="filterTable(this.value)" id="risk-search"/>
+      </div>
+      <select class="filter-select" onchange="filterByCategory(this.value)">
+        <option value="">All Categories</option>
+        <option value="Cyber">Cyber</option>
+        <option value="Operational">Operational</option>
+        <option value="Compliance">Compliance</option>
+        <option value="Financial">Financial</option>
+        <option value="Strategic">Strategic</option>
+      </select>
+      <select class="filter-select" onchange="filterByRating(this.value)">
+        <option value="">All Ratings</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <button class="btn btn-outline" onclick="resetFilters()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+      <button class="btn btn-success" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="risk-register-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Risk ID <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(1)">Category <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(2)">Description</th>
+            <th onclick="sortTable(3)">Inherent Rating <span class="sort-icon">⇅</span></th>
+            <th onclick="sortTable(4)">Likelihood</th>
+            <th onclick="sortTable(5)">Impact</th>
+            <th onclick="sortTable(6)">Score <span class="sort-icon">⇅</span></th>
+            <th>Controls in Place</th>
+            <th onclick="sortTable(8)">Residual Risk <span class="sort-icon">⇅</span></th>
+            <th>Treatment</th>
+            <th>Owner</th>
+            <th onclick="sortTable(11)">Status <span class="sort-icon">⇅</span></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="risk-table-body"></tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:10px;text-align:right;" id="table-count">Showing 8 of 8 risks</p>
+  </section>
+
+  <!-- =============================================
+       SECTION 4: THREAT LANDSCAPE
+       ============================================= -->
+  <section class="section" id="sec-threats">
+    <div class="section-header">
+      <div class="section-icon" style="background:#FEE2E2;color:#EF4444;"><i class="fa-solid fa-bug"></i></div>
+      <div class="section-title">
+        <h2>Threat Landscape & Vulnerability Log</h2>
+        <p>Active threat intelligence mapped to enterprise vulnerabilities and assets</p>
+      </div>
+    </div>
+
+    <div class="table-controls">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input class="search-box" type="text" placeholder="Search threats…" oninput="filterThreats(this.value)"/>
+      </div>
+      <select class="filter-select" onchange="filterThreatSource(this.value)">
+        <option value="">All Sources</option>
+        <option value="External">External</option>
+        <option value="Internal">Internal</option>
+        <option value="Both">Both</option>
+      </select>
+      <button class="btn btn-outline" onclick="showToast('Threat scan initiated…','info')">
+        <i class="fa-solid fa-radar"></i> Threat Scan
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="threat-table">
+        <thead>
+          <tr>
+            <th>Threat ID</th>
+            <th>Source</th>
+            <th>Threat Type</th>
+            <th>Vulnerability Exploited</th>
+            <th>Affected Asset</th>
+            <th>Likelihood</th>
+            <th>Impact</th>
+            <th>Risk Score</th>
+            <th>Linked Risk</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="threat-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =============================================
+       SECTION 5: RISK TREATMENT REGISTER
+       ============================================= -->
+  <section class="section" id="sec-treatment">
+    <div class="section-header">
+      <div class="section-icon" style="background:#EDE9FE;color:#7C3AED;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+      <div class="section-title">
+        <h2>Risk Treatment & Strategy Register</h2>
+        <p>Detailed action plans, framework mappings, KPIs and cost estimates for each risk</p>
+      </div>
+      <button class="btn btn-outline" onclick="toggleAllTreatments()">
+        <i class="fa-solid fa-expand-alt"></i> Expand All
+      </button>
+    </div>
+
+    <div class="treatment-cards" id="treatment-cards-container"></div>
+  </section>
+
+  <!-- =============================================
+       SECTION 6: RISK RATING CALCULATOR
+       ============================================= -->
+  <section class="section" id="sec-calculator">
+    <div class="section-header">
+      <div class="section-icon" style="background:#D1FAE5;color:#059669;"><i class="fa-solid fa-calculator"></i></div>
+      <div class="section-title">
+        <h2>Interactive Risk Rating Calculator</h2>
+        <p>Adjust likelihood and impact sliders to instantly compute your risk score and rating</p>
+      </div>
+    </div>
+
+    <div class="calculator-wrapper">
+
+      <!-- INPUT PANEL -->
+      <div class="calc-card card-3d">
+        <span class="calc-label"><i class="fa-solid fa-sliders" style="margin-right:6px;color:var(--accent-blue)"></i>Risk Input Parameters</span>
+
+        <div class="slider-group">
+          <div class="slider-value-display">
+            <span class="slider-name"><i class="fa-solid fa-dice" style="color:var(--accent-blue);margin-right:5px;"></i>Likelihood</span>
+            <span class="slider-val" id="like-val">3</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" id="likelihood-slider" oninput="calcRisk()"/>
+          <div class="slider-labels">
+            <span>1 · Rare</span><span>2 · Unlikely</span><span>3 · Possible</span><span>4 · Likely</span><span>5 · Almost Certain</span>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-value-display">
+            <span class="slider-name"><i class="fa-solid fa-burst" style="color:var(--accent-red);margin-right:5px;"></i>Impact</span>
+            <span class="slider-val" id="impact-val">3</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" id="impact-slider" oninput="calcRisk()"/>
+          <div class="slider-labels">
+            <span>1 · Insig.</span><span>2 · Minor</span><span>3 · Moderate</span><span>4 · Major</span><span>5 · Severe</span>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px;">
+          <span class="calc-label">Likelihood Scale Reference</span>
+          <table class="methodology-table" style="font-size:12px;">
+            <tr><th>Rating</th><th>Label</th><th>Frequency</th></tr>
+            <tr><td><span class="badge badge-low">1</span></td><td>Rare</td><td>Less than once in 10 years</td></tr>
+            <tr><td><span class="badge badge-green">2</span></td><td>Unlikely</td><td>Once in 3–10 years</td></tr>
+            <tr><td><span class="badge badge-amber">3</span></td><td>Possible</td><td>Once in 1–3 years</td></tr>
+            <tr><td><span class="badge badge-high">4</span></td><td>Likely</td><td>Once a year</td></tr>
+            <tr><td><span class="badge badge-critical">5</span></td><td>Almost Certain</td><td>Multiple times/year</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- RESULT PANEL -->
+      <div class="calc-result card-3d">
+        <div class="result-formula" id="result-formula">3 × 3 = <strong>9</strong></div>
+
+        <div class="result-score-ring" id="result-ring" style="border-color:#F59E0B;background:#FFFBEB;">
+          <div class="score-num" id="result-num" style="color:#F59E0B;">9</div>
+          <div class="score-max">/ 25</div>
+        </div>
+
+        <div class="result-rating-label" id="result-label" style="background:#FEF3C7;color:#92400E;">
+          <i class="fa-solid fa-triangle-exclamation"></i> MEDIUM RISK
+        </div>
+
+        <div class="result-recommendation" id="result-rec">
+          <strong>📋 Recommended Action:</strong> Implement specific risk controls and assign a risk owner. Schedule quarterly reviews and document mitigation progress. Escalate to management if conditions worsen.
+        </div>
+
+        <div class="result-action-btns">
+          <button class="btn btn-primary" onclick="logToRegister()"><i class="fa-solid fa-plus"></i> Log to Register</button>
+          <button class="btn btn-outline" onclick="resetCalc()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+          <button class="btn btn-outline" onclick="copyScore()"><i class="fa-solid fa-copy"></i> Copy</button>
+        </div>
+
+        <div style="width:100%;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);display:block;margin-bottom:10px;">Risk Score Reference Matrix</span>
+          <div style="display:grid;grid-template-columns:auto repeat(5,1fr);gap:2px;font-size:9px;" id="mini-ref-matrix"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =============================================
+       SECTION 7: DOCUMENTATION
+       ============================================= -->
+  <section class="section" id="sec-documentation">
+    <div class="section-header">
+      <div class="section-icon" style="background:#FEF3C7;color:#D97706;"><i class="fa-solid fa-book-open"></i></div>
+      <div class="section-title">
+        <h2>Documentation & Governance</h2>
+        <p>Risk methodology, appetite statements, review cycles and approval workflows</p>
+      </div>
+      <button class="btn btn-outline" onclick="printReport()"><i class="fa-solid fa-print"></i> Print Docs</button>
+    </div>
+
+    <div class="docs-grid">
+      <!-- TOC -->
+      <div class="docs-toc">
+        <p class="toc-title"><i class="fa-solid fa-list-ul" style="margin-right:6px;color:var(--accent-blue)"></i>Table of Contents</p>
+        <ul class="toc-list">
+          <li><a href="#doc-methodology"><i class="fa-solid fa-ruler"></i> Risk Methodology</a></li>
+          <li><a href="#doc-appetite"><i class="fa-solid fa-gauge"></i> Risk Appetite Statement</a></li>
+          <li><a href="#doc-scale"><i class="fa-solid fa-chart-bar"></i> Qualitative Scale</a></li>
+          <li><a href="#doc-cycle"><i class="fa-solid fa-rotate"></i> Review Cycle</a></li>
+          <li><a href="#doc-workflow"><i class="fa-solid fa-diagram-project"></i> Approval Workflow</a></li>
+          <li><a href="#doc-frameworks"><i class="fa-solid fa-landmark"></i> Framework References</a></li>
+          <li><a href="#doc-roles"><i class="fa-solid fa-users"></i> Roles & Responsibilities</a></li>
+          <li><a href="#doc-glossary"><i class="fa-solid fa-spell-check"></i> Glossary</a></li>
+        </ul>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="docs-content">
+
+        <div class="doc-section" id="doc-methodology">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-ruler" style="color:var(--accent-blue)"></i>
+            <h3>1. Risk Assessment Methodology</h3>
+          </div>
+          <div class="doc-section-body">
+            <p>This framework employs a <strong>qualitative risk assessment methodology</strong> aligned with ISO 31000:2018 and COSO ERM principles. Risks are evaluated across five categories: Operational, Cyber, Compliance, Financial, and Strategic.</p>
+            <p>The inherent risk is assessed before controls are applied. After documenting existing controls, the residual risk is calculated. Both likelihood and impact are rated on a 1–5 scale to produce a risk score (Likelihood × Impact), which determines the rating tier.</p>
+            <h4>Assessment Approach:</h4>
+            <ul>
+              <li>Workshops with business unit leaders and subject matter experts</li>
+              <li>Review of incident reports, audit findings, and external threat intelligence</li>
+              <li>Cross-functional risk committee review and sign-off</li>
+              <li>Alignment with regulatory requirements (GDPR, SOX, PCI-DSS, ISO 27001)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-appetite">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-gauge" style="color:var(--accent-green)"></i>
+            <h3>2. Risk Appetite Statement</h3>
+          </div>
+          <div class="doc-section-body">
+            <p>The organisation maintains a <strong>low to moderate risk appetite</strong> across all enterprise risk domains. The Board of Directors sets the overall tolerance, with specific limits delegated to the Executive Leadership Team and risk owners.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px;">
+              <div style="background:var(--risk-critical-bg);border-radius:10px;padding:14px;border:1px solid #FECACA;">
+                <div style="font-weight:700;font-size:12px;color:#991B1B;margin-bottom:4px;">🛑 Zero Tolerance</div>
+                <div style="font-size:12px;color:#7F1D1D;">Regulatory violations, data breaches, fraud, safety incidents</div>
+              </div>
+              <div style="background:var(--risk-high-bg);border-radius:10px;padding:14px;border:1px solid #FED7AA;">
+                <div style="font-weight:700;font-size:12px;color:#9A3412;margin-bottom:4px;">⚠️ Low Appetite</div>
+                <div style="font-size:12px;color:#7C2D12;">Reputational, cyber, financial loss, strategic misalignment</div>
+              </div>
+              <div style="background:var(--risk-medium-bg);border-radius:10px;padding:14px;border:1px solid #FDE68A;">
+                <div style="font-weight:700;font-size:12px;color:#92400E;margin-bottom:4px;">📊 Moderate</div>
+                <div style="font-size:12px;color:#78350F;">Operational disruptions, minor compliance gaps, IT failures</div>
+              </div>
+              <div style="background:var(--risk-low-bg);border-radius:10px;padding:14px;border:1px solid #BBF7D0;">
+                <div style="font-weight:700;font-size:12px;color:#166534;margin-bottom:4px;">✅ Higher Appetite</div>
+                <div style="font-size:12px;color:#14532D;">Innovation risk, strategic experimentation, market initiatives</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-scale">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-chart-bar" style="color:var(--accent-purple)"></i>
+            <h3>3. Qualitative Scale Definition</h3>
+          </div>
+          <div class="doc-section-body">
+            <table class="methodology-table">
+              <tr><th>Score</th><th>Rating</th><th>Range</th><th>Required Action</th><th>Review Period</th></tr>
+              <tr><td><span class="badge badge-low">1–4</span></td><td>Low</td><td>Score 1–4</td><td>Accept & monitor at periodic review</td><td>Annual</td></tr>
+              <tr><td><span class="badge badge-medium">5–9</span></td><td>Medium</td><td>Score 5–9</td><td>Mitigate; assign owner; track quarterly</td><td>Quarterly</td></tr>
+              <tr><td><span class="badge badge-high">10–16</span></td><td>High</td><td>Score 10–16</td><td>Immediate action plan; monthly tracking</td><td>Monthly</td></tr>
+              <tr><td><span class="badge badge-critical">17–25</span></td><td>Critical</td><td>Score 17–25</td><td>Executive escalation; urgent treatment required</td><td>Weekly</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-cycle">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-rotate" style="color:var(--accent-amber)"></i>
+            <h3>4. Review Cycle</h3>
+          </div>
+          <div class="doc-section-body">
+            <p>The risk register is reviewed on a <strong>quarterly basis</strong> by the Risk Management Committee, with ad-hoc reviews triggered by significant incidents, regulatory changes, or material business changes.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+              <div style="flex:1;min-width:120px;background:var(--bg-main);border-radius:10px;padding:14px;border:1px solid var(--border);text-align:center;">
+                <div style="font-size:20px;margin-bottom:6px;">📅</div>
+                <div style="font-weight:700;font-size:13px;">Q1 — January</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Annual risk landscape review</div>
+              </div>
+              <div style="flex:1;min-width:120px;background:var(--accent-blue-light);border-radius:10px;padding:14px;border:1px solid #BFDBFE;text-align:center;">
+                <div style="font-size:20px;margin-bottom:6px;">📋</div>
+                <div style="font-weight:700;font-size:13px;color:var(--accent-blue-dark);">Q2 — April</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Mid-year treatment review</div>
+              </div>
+              <div style="flex:1;min-width:120px;background:var(--bg-main);border-radius:10px;padding:14px;border:1px solid var(--border);text-align:center;">
+                <div style="font-size:20px;margin-bottom:6px;">🔍</div>
+                <div style="font-weight:700;font-size:13px;">Q3 — July</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Controls effectiveness review</div>
+              </div>
+              <div style="flex:1;min-width:120px;background:var(--bg-main);border-radius:10px;padding:14px;border:1px solid var(--border);text-align:center;">
+                <div style="font-size:20px;margin-bottom:6px;">✅</div>
+                <div style="font-weight:700;font-size:13px;">Q4 — October</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Year-end risk sign-off</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-workflow">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-diagram-project" style="color:var(--accent-blue)"></i>
+            <h3>5. Approval Workflow</h3>
+          </div>
+          <div class="doc-section-body">
+            <p>All risk assessments follow a structured <strong>Draft → Review → Approved</strong> workflow before publication to the enterprise risk register.</p>
+            <div class="approval-workflow">
+              <div class="workflow-step">
+                <i class="fa-solid fa-pen-to-square" style="color:var(--accent-blue)"></i>
+                <span>1. Draft</span>
+                <div style="font-size:10px;color:var(--text-muted)">Risk Owner</div>
+              </div>
+              <div class="workflow-arrow">→</div>
+              <div class="workflow-step">
+                <i class="fa-solid fa-user-check" style="color:var(--accent-amber)"></i>
+                <span>2. Peer Review</span>
+                <div style="font-size:10px;color:var(--text-muted)">Risk Analyst</div>
+              </div>
+              <div class="workflow-arrow">→</div>
+              <div class="workflow-step">
+                <i class="fa-solid fa-shield-halved" style="color:var(--accent-purple)"></i>
+                <span>3. Risk Mgr</span>
+                <div style="font-size:10px;color:var(--text-muted)">Risk Manager</div>
+              </div>
+              <div class="workflow-arrow">→</div>
+              <div class="workflow-step">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent-green)"></i>
+                <span>4. Approved</span>
+                <div style="font-size:10px;color:var(--text-muted)">CRO / Board</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-frameworks">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-landmark" style="color:var(--accent-green)"></i>
+            <h3>6. Framework References</h3>
+          </div>
+          <div class="doc-section-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">🏛️ ISO 27001</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Information Security Management System</div>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">🔒 NIST CSF 2.0</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Cybersecurity Framework — Identify, Protect, Detect, Respond, Recover</div>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">📊 COBIT 2019</div>
+                <div style="font-size:12px;color:var(--text-secondary);">IT Governance & Management Framework</div>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">🏦 COSO ERM</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Enterprise Risk Management Integrated Framework</div>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">📋 ISO 31000</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Risk Management Principles & Guidelines</div>
+              </div>
+              <div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--bg-main);">
+                <div style="font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:4px;">🔐 PCI-DSS v4.0</div>
+                <div style="font-size:12px;color:var(--text-secondary);">Payment Card Industry Data Security Standard</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-roles">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-users" style="color:var(--accent-amber)"></i>
+            <h3>7. Roles & Responsibilities</h3>
+          </div>
+          <div class="doc-section-body">
+            <table class="methodology-table">
+              <tr><th>Role</th><th>Responsibility</th><th>Authority</th></tr>
+              <tr><td>Board of Directors</td><td>Set risk appetite and tolerance</td><td>Ultimate accountability</td></tr>
+              <tr><td>Chief Risk Officer</td><td>Oversee risk framework; report to board</td><td>Final approval</td></tr>
+              <tr><td>Risk Manager</td><td>Maintain register; coordinate assessments</td><td>Review & escalate</td></tr>
+              <tr><td>Risk Owner</td><td>Identify, assess, and treat risks in their domain</td><td>Primary accountability</td></tr>
+              <tr><td>Internal Audit</td><td>Independent assurance on controls effectiveness</td><td>Report to Audit Committee</td></tr>
+              <tr><td>Compliance Officer</td><td>Regulatory mapping and compliance risk</td><td>Escalation rights</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="doc-section" id="doc-glossary">
+          <div class="doc-section-header">
+            <i class="fa-solid fa-spell-check" style="color:var(--accent-red)"></i>
+            <h3>8. Glossary of Terms</h3>
+          </div>
+          <div class="doc-section-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Inherent Risk</strong> — risk before any controls</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Residual Risk</strong> — risk after controls are applied</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Risk Appetite</strong> — amount of risk willing to accept</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Risk Tolerance</strong> — acceptable variation around objectives</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Control</strong> — measure that modifies risk</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>KRI</strong> — Key Risk Indicator; early warning metric</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>KPI</strong> — Key Performance Indicator for control effectiveness</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Threat</strong> — potential cause of an unwanted event</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Vulnerability</strong> — weakness that can be exploited</div>
+              <div style="background:var(--bg-main);padding:10px;border-radius:8px;"><strong>Likelihood</strong> — probability of a risk event occurring</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div><!-- end main-content -->
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="risk-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-blue-light);display:flex;align-items:center;justify-content:center;color:var(--accent-blue);">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 id="modal-title">Risk Detail</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast-container"></div>
+
+<!-- =============================================
+     JAVASCRIPT
+     ============================================= -->
+<script>
+// ============ DATA ============
+
+const riskData = [
+  {
+    id:'RSK-001', cat:'Cyber', desc:'Unauthorised access leading to customer data breach exposing PII and financial records',
+    inherent:'Critical', likelihood:4, impact:5, score:20,
+    controls:'Firewall, IDS/IPS, AES-256 encryption, MFA, SIEM monitoring',
+    residual:'High', treatment:'Mitigate', owner:'CISO', status:'In Progress'
+  },
+  {
+    id:'RSK-002', cat:'Operational', desc:'Third-party vendor failure causing critical business process disruption',
+    inherent:'High', likelihood:3, impact:4, score:12,
+    controls:'SLA agreements, vendor due diligence, backup suppliers',
+    residual:'Medium', treatment:'Transfer', owner:'COO', status:'Monitored'
+  },
+  {
+    id:'RSK-003', cat:'Compliance', desc:'Regulatory fine due to GDPR non-compliance in data processing and consent management',
+    inherent:'Critical', likelihood:3, impact:5, score:15,
+    controls:'Privacy policy, DPA, consent management platform, DPIA process',
+    residual:'Medium', treatment:'Mitigate', owner:'DPO', status:'In Progress'
+  },
+  {
+    id:'RSK-004', cat:'Cyber', desc:'Insider threat from privileged user misusing access to exfiltrate sensitive corporate data',
+    inherent:'High', likelihood:3, impact:4, score:12,
+    controls:'PAM solution, UEBA monitoring, background checks, least-privilege access',
+    residual:'Low', treatment:'Mitigate', owner:'CISO', status:'Monitored'
+  },
+  {
+    id:'RSK-005', cat:'Operational', desc:'Critical IT system failure causing extended business interruption and revenue loss',
+    inherent:'High', likelihood:3, impact:4, score:12,
+    controls:'DR plan, redundant infrastructure, RTO<4hrs BCP tested annually',
+    residual:'Medium', treatment:'Mitigate', owner:'CTO', status:'Open'
+  },
+  {
+    id:'RSK-006', cat:'Financial', desc:'Financial fraud through payment diversion or invoice manipulation by internal staff',
+    inherent:'Critical', likelihood:2, impact:5, score:10,
+    controls:'Segregation of duties, dual approval, bank verification protocol',
+    residual:'Low', treatment:'Mitigate', owner:'CFO', status:'Monitored'
+  },
+  {
+    id:'RSK-007', cat:'Strategic', desc:'Loss of major client accounts due to competitor disruption and market share erosion',
+    inherent:'High', likelihood:4, impact:4, score:16,
+    controls:'CRM system, client retention programme, NPS tracking',
+    residual:'Medium', treatment:'Accept', owner:'CEO', status:'Open'
+  },
+  {
+    id:'RSK-008', cat:'Compliance', desc:'Compliance gap in anti-money laundering controls leading to regulatory sanction',
+    inherent:'Medium', likelihood:2, impact:4, score:8,
+    controls:'AML screening, transaction monitoring, KYC/CDD procedures',
+    residual:'Low', treatment:'Mitigate', owner:'CCO', status:'Closed'
+  }
+];
+
+const threatData = [
+  {
+    id:'THR-001', source:'External', type:'Malware / Ransomware', vuln:'Unpatched OS vulnerabilities & weak endpoint protection',
+    asset:'Core Banking System', likelihood:4, impact:5, linkedRisk:'RSK-001'
+  },
+  {
+    id:'THR-002', source:'Internal', type:'Human Error', vuln:'Lack of staff security awareness training',
+    asset:'Email & Collaboration Platform', likelihood:4, impact:3, linkedRisk:'RSK-004'
+  },
+  {
+    id:'THR-003', source:'External', type:'Supply Chain Attack', vuln:'Insufficient third-party security vetting',
+    asset:'ERP & Vendor APIs', likelihood:3, impact:4, linkedRisk:'RSK-002'
+  },
+  {
+    id:'THR-004', source:'Both', type:'Process Failure', vuln:'Inadequate BCP testing and single points of failure',
+    asset:'Data Centre / Cloud Infrastructure', likelihood:2, impact:5, linkedRisk:'RSK-005'
+  },
+  {
+    id:'THR-005', source:'Internal', type:'Insider Threat', vuln:'Excessive privileged access without monitoring',
+    asset:'Customer Database & HR Systems', likelihood:3, impact:4, linkedRisk:'RSK-004'
+  },
+  {
+    id:'THR-006', source:'External', type:'Regulatory / Legal', vuln:'Incomplete data inventory and consent tracking',
+    asset:'Customer Data Repositories', likelihood:3, impact:5, linkedRisk:'RSK-003'
+  }
+];
+
+const treatmentData = [
+  {
+    id:'RSK-001', strategy:'Mitigate', desc:'Data Breach Prevention',
+    actions:'1. Deploy next-gen EDR solution (Month 1). 2. Enable Zero-Trust Network Architecture (Month 2-3). 3. Conduct penetration testing (Month 4). 4. Staff phishing simulation training (Month 1). 5. Implement Data Loss Prevention (DLP) (Month 3).',
+    frameworks:'ISO 27001 A.13, NIST CSF PR.AC-4, NIST SP 800-53',
+    kpi:'Reduction in security incidents by 80%; MTTD < 2hrs; Zero critical CVEs unpatched > 30 days',
+    cost:'High', kpiPct:62, timeline:'Q2 2025 – Q4 2025', responsible:'CISO / Security Team'
+  },
+  {
+    id:'RSK-002', strategy:'Transfer', desc:'Vendor Failure Mitigation',
+    actions:'1. Negotiate cyber insurance policy for vendor failure (Month 1). 2. Add liability clauses in SLAs (Month 2). 3. Identify and onboard backup vendors (Month 2-3). 4. Quarterly vendor performance reviews.',
+    frameworks:'ISO 27001 A.15, COBIT APO10, NIST CSF ID.SC',
+    kpi:'Vendor SLA compliance > 99%; BCP tested bi-annually; < 4hr RTO achieved',
+    cost:'Medium', kpiPct:78, timeline:'Q2 2025 – Q3 2025', responsible:'COO / Procurement'
+  },
+  {
+    id:'RSK-003', strategy:'Mitigate', desc:'GDPR Compliance Programme',
+    actions:'1. Complete Article 30 data mapping (Month 1). 2. Update privacy notices and consent flows (Month 2). 3. Appoint DPO and establish DSAR process (Month 1). 4. Conduct annual DPIA for high-risk processing. 5. Staff data protection training.',
+    frameworks:'GDPR Articles 5,13,30,35; ISO 27001 A.18; NIST Privacy Framework',
+    kpi:'Zero regulatory fines; 100% DSAR responses within 30 days; Annual DPO audit clear',
+    cost:'Medium', kpiPct:55, timeline:'Q1 2025 – Q3 2025', responsible:'DPO / Legal'
+  },
+  {
+    id:'RSK-004', strategy:'Mitigate', desc:'Insider Threat Programme',
+    actions:'1. Deploy UEBA (User & Entity Behavior Analytics) (Month 1). 2. Implement PAM with session recording (Month 2). 3. Enforce least-privilege access reviews quarterly. 4. Enhanced background checks for privileged roles. 5. Create anonymous reporting hotline.',
+    frameworks:'NIST SP 800-53 AC-2, ISO 27001 A.9.2, COBIT DSS05',
+    kpi:'100% privileged accounts reviewed quarterly; UEBA alerts resolved within 24hrs; Zero undetected exfiltration events',
+    cost:'High', kpiPct:71, timeline:'Q2 2025 – Q4 2025', responsible:'CISO / HR'
+  },
+  {
+    id:'RSK-005', strategy:'Mitigate', desc:'Business Continuity Enhancement',
+    actions:'1. Update and test BCP/DRP annually (Month 1). 2. Implement active-active data centre failover (Month 3). 3. Define RTOs and RPOs for all critical systems. 4. Conduct tabletop exercises (bi-annual). 5. Cloud disaster recovery setup.',
+    frameworks:'ISO 22301, COBIT DSS04, NIST SP 800-34',
+    kpi:'RTO < 4 hrs achieved; RPO < 1 hr; 100% critical systems covered in DRP; Annual BCP test pass rate 100%',
+    cost:'High', kpiPct:48, timeline:'Q2 2025 – Q1 2026', responsible:'CTO / Operations'
+  },
+  {
+    id:'RSK-006', strategy:'Mitigate', desc:'Financial Fraud Prevention Controls',
+    actions:'1. Enforce dual-approval on all payments > $10K (immediate). 2. Implement AI-based anomaly detection on transactions. 3. Regular forensic audit of payment flows (quarterly). 4. Staff fraud awareness training (annual). 5. Enhance bank verification protocols.',
+    frameworks:'COSO ERM CC7.4, SOX Section 302/404, COBIT APO12',
+    kpi:'Zero confirmed fraud incidents; 100% dual-approval compliance; Anomaly alerts reviewed within 2hrs',
+    cost:'Medium', kpiPct:85, timeline:'Q1 2025 – Q2 2025', responsible:'CFO / Internal Audit'
+  },
+  {
+    id:'RSK-007', strategy:'Accept', desc:'Strategic Market Risk Monitoring',
+    actions:'1. Establish quarterly client health score review. 2. Deploy NPS and churn prediction analytics. 3. CRM-driven account management for top-20 clients. 4. Review competitive landscape bi-annually. 5. Escalate to Board if churn > 15% in a quarter.',
+    frameworks:'COSO ERM Principle 6, ISO 31000 Clause 6.4.2',
+    kpi:'Client retention rate > 92%; NPS > 45; Revenue from top-20 clients stable or growing',
+    cost:'Low', kpiPct:66, timeline:'Ongoing', responsible:'CEO / Sales Director'
+  },
+  {
+    id:'RSK-008', strategy:'Mitigate', desc:'AML Compliance Enhancement',
+    actions:'1. Upgrade transaction monitoring system with ML-based rules (Month 2). 2. Refresh KYC/CDD procedures and staff training (Month 1). 3. Conduct independent AML audit (Month 3). 4. Implement SAR filing workflow with 24hr escalation. 5. Regulatory horizon scanning.',
+    frameworks:'FATF Recommendations, UK MLR 2017, COBIT APO12, ISO 31000',
+    kpi:'Zero missed SARs; 100% KYC completeness for new clients; AML audit with no material findings',
+    cost:'Medium', kpiPct:92, timeline:'Q1 2025 – Q2 2025', responsible:'CCO / Compliance Team'
+  }
+];
+
+// ===== Heat Map Data =====
+const matrixRisks = [
+  { num:1, id:'RSK-001', name:'Data Breach', cat:'Cyber', l:4, i:5 },
+  { num:2, id:'RSK-002', name:'Vendor Failure', cat:'Operational', l:3, i:4 },
+  { num:3, id:'RSK-003', name:'GDPR Fine', cat:'Compliance', l:3, i:5 },
+  { num:4, id:'RSK-005', name:'IT System Failure', cat:'Operational', l:3, i:4 },
+  { num:5, id:'RSK-007', name:'Client Loss', cat:'Strategic', l:4, i:4 },
+  { num:6, id:'RSK-008', name:'AML Gap', cat:'Compliance', l:2, i:4 },
+];
+
+const likelihoodLabels = ['Almost Certain','Likely','Possible','Unlikely','Rare'];
+const impactLabels = ['Insignificant','Minor','Moderate','Major','Severe'];
+
+// ============ NAVIGATION ============
+function showSection(key, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + key).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {
+    dashboard:'Dashboard Overview', heatmap:'Risk Assessment Matrix — Heat Map',
+    register:'Enterprise Risk Register', threats:'Threat Landscape & Vulnerability Log',
+    treatment:'Risk Treatment & Strategy Register', calculator:'Interactive Risk Rating Calculator',
+    documentation:'Documentation & Governance'
+  };
+  document.getElementById('topbar-title-text').textContent = titles[key] || key;
+  window.scrollTo({top:0, behavior:'smooth'});
+  // Close sidebar on mobile
+  if(window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('mobile-open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+
+// ============ LOADER ============
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+    initCounters();
+    buildHeatmap();
+    buildRiskTable(riskData);
+    buildThreatTable(threatData);
+    buildTreatmentCards();
+    buildCategoryBars();
+    buildMiniMatrix();
+    calcRisk();
+  }, 2200);
+});
+
+// ============ COUNTER ANIMATION ============
+function initCounters() {
+  document.querySelectorAll('.counter').forEach(el => {
+    const target = +el.dataset.target;
+    let count = 0;
+    const step = Math.ceil(target / 25);
+    const timer = setInterval(() => {
+      count = Math.min(count + step, target);
+      el.textContent = count;
+      if(count >= target) clearInterval(timer);
+    }, 50);
+  });
+}
+
+// ============ HEAT MAP ============
+function buildHeatmap() {
+  const grid = document.getElementById('heatmap-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+
+  // Column headers (Impact)
+  grid.appendChild(Object.assign(document.createElement('div'),{className:'matrix-col-header',textContent:''}));
+  ['1\nInsig.','2\nMinor','3\nModerate','4\nMajor','5\nSevere'].forEach((label,i) => {
+    const d = document.createElement('div');
+    d.className = 'matrix-col-header';
+    d.innerHTML = `<span style="font-size:9px;font-weight:700;text-align:center;">${label.replace('\n','<br>')}</span>`;
+    grid.appendChild(d);
+  });
+
+  // Rows: likelihood 5 (Almost Certain) at top
+  for(let l = 5; l >= 1; l--) {
+    const rowLabel = document.createElement('div');
+    rowLabel.className = 'matrix-row-header';
+    rowLabel.innerHTML = `<span style="font-size:9px;line-height:1.2;">${l}<br>${likelihoodLabels[5-l]}</span>`;
+    grid.appendChild(rowLabel);
+
+    for(let i = 1; i <= 5; i++) {
+      const score = l * i;
+      const cell = document.createElement('div');
+      const colorClass = getCellColorClass(score);
+      cell.className = `matrix-cell ${colorClass}`;
+      cell.title = `L:${l} × I:${i} = ${score}`;
+
+      // Score label
+      const scoreSpan = document.createElement('span');
+      scoreSpan.textContent = score;
+      scoreSpan.style.cssText = 'font-size:10px;font-weight:700;opacity:0.45;';
+      cell.appendChild(scoreSpan);
+
+      // Risks on this cell
+      matrixRisks.forEach(r => {
+        if(r.l === l && r.i === i) {
+          const dot = document.createElement('div');
+          dot.className = 'risk-dot';
+          dot.textContent = r.num;
+          dot.title = r.name;
+          dot.style.cssText = `position:absolute;top:4px;right:4px;`;
+          dot.onclick = () => showRiskModal(riskData.find(x=>x.id===r.id));
+          cell.appendChild(dot);
+        }
+      });
+
+      cell.onclick = () => showToast(`Cell: L${l} × I${i} = Score ${score} — ${getRating(score)}`, getRatingClass(score));
+      grid.appendChild(cell);
+    }
+  }
+
+  // Risk plot list
+  const list = document.getElementById('risk-plot-list');
+  matrixRisks.forEach(r => {
+    const score = r.l * r.i;
+    const item = document.createElement('div');
+    item.className = 'risk-plot-item';
+    item.innerHTML = `
+      <div class="rp-num">${r.num}</div>
+      <div class="rp-info">
+        <div class="rp-name">${r.id} — ${r.name}</div>
+        <div class="rp-cat">${r.cat} · L${r.l} × I${r.i}</div>
+      </div>
+      <span class="rp-score ${getRatingBadgeClass(score)}">${score}</span>
+    `;
+    item.onclick = () => showRiskModal(riskData.find(x=>x.id===r.id));
+    list.appendChild(item);
+  });
+}
+
+function getCellColorClass(score) {
+  if(score <= 2) return 'cell-1';
+  if(score <= 3) return 'cell-2';
+  if(score <= 4) return 'cell-3';
+  if(score === 5) return 'cell-5';
+  if(score === 6) return 'cell-6';
+  if(score === 7) return 'cell-7';
+  if(score === 8) return 'cell-8';
+  if(score === 9) return 'cell-9';
+  if(score === 10) return 'cell-10';
+  if(score === 12) return 'cell-11';
+  if(score === 15) return 'cell-14';
+  if(score === 16) return 'cell-16';
+  if(score === 20) return 'cell-17';
+  if(score >= 25) return 'cell-20';
+  if(score <= 12) return 'cell-12';
+  if(score <= 16) return 'cell-15';
+  if(score <= 20) return 'cell-17';
+  return 'cell-19';
+}
+
+// ============ RISK TABLE ============
+function buildRiskTable(data) {
+  const tbody = document.getElementById('risk-table-body');
+  tbody.innerHTML = '';
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="risk-id">${r.id}</span></td>
+      <td>${getCatBadge(r.cat)}</td>
+      <td style="max-width:180px;font-size:12.5px;line-height:1.5;">${r.desc.substring(0,70)}…</td>
+      <td>${getRatingBadge(r.inherent)}</td>
+      <td>${getLikelihoodBar(r.likelihood)}</td>
+      <td>${getImpactBar(r.impact)}</td>
+      <td>${getScorePill(r.score)}</td>
+      <td style="max-width:140px;font-size:12px;color:var(--text-secondary);line-height:1.4;">${r.controls.substring(0,60)}…</td>
+      <td>${getRatingBadge(r.residual)}</td>
+      <td><span class="treatment-badge ${getTreatClass(r.treatment)}">${r.treatment}</span></td>
+      <td style="font-size:12.5px;font-weight:600;">${r.owner}</td>
+      <td>${getStatusBadge(r.status)}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn view" title="View Details" onclick='showRiskModal(${JSON.stringify(r)})'><i class="fa-solid fa-eye"></i></button>
+          <button class="action-btn edit" title="Edit Risk" onclick="showToast('Edit mode: ${r.id}','info')"><i class="fa-solid fa-pen"></i></button>
+          <button class="action-btn delete" title="Archive" onclick="showToast('${r.id} archived.','warning')"><i class="fa-solid fa-archive"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('table-count').textContent = `Showing ${data.length} of ${riskData.length} risks`;
+}
+
+function getCatBadge(cat) {
+  const map = {Cyber:'badge-blue',Operational:'badge-amber',Compliance:'badge-purple',Financial:'badge-green',Strategic:'badge-medium'};
+  return `<span class="badge ${map[cat]||'badge-blue'}">${cat}</span>`;
+}
+function getRatingBadge(r) {
+  const m = {Low:'badge-low',Medium:'badge-medium',High:'badge-high',Critical:'badge-critical'};
+  return `<span class="badge ${m[r]||'badge-low'}">${r}</span>`;
+}
+function getScorePill(s) {
+  let bg,col;
+  if(s<=4){bg='#DCFCE7';col='#166534';}
+  else if(s<=9){bg='#FEF3C7';col='#92400E';}
+  else if(s<=16){bg='#FFEDD5';col='#9A3412';}
+  else{bg='#FEE2E2';col='#991B1B';}
+  return `<span class="score-pill" style="background:${bg};color:${col};">${s}</span>`;
+}
+function getLikelihoodBar(v) {
+  const labels=['','Rare','Unlikely','Possible','Likely','Certain'];
+  return `<div style="display:flex;flex-direction:column;gap:3px;">
+    <span style="font-size:11px;font-weight:700;color:var(--text-primary);">${v} — ${labels[v]}</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:${v*20}%;background:var(--accent-blue);"></div></div>
+  </div>`;
+}
+function getImpactBar(v) {
+  const labels=['','Insig.','Minor','Moderate','Major','Severe'];
+  const colors=['','#22C55E','#84CC16','#F59E0B','#F97316','#EF4444'];
+  return `<div style="display:flex;flex-direction:column;gap:3px;">
+    <span style="font-size:11px;font-weight:700;color:var(--text-primary);">${v} — ${labels[v]}</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:${v*20}%;background:${colors[v]};"></div></div>
+  </div>`;
+}
+function getTreatClass(t) {
+  return {Mitigate:'treat-mitigate',Transfer:'treat-transfer',Accept:'treat-accept',Avoid:'treat-avoid'}[t]||'treat-mitigate';
+}
+function getStatusBadge(s) {
+  const cls = {Open:'status-open','In Progress':'status-inprogress',Monitored:'status-monitored',Closed:'status-closed'};
+  return `<span class="status-badge ${cls[s]||'status-open'}">${s}</span>`;
+}
+
+// ============ THREAT TABLE ============
+function buildThreatTable(data) {
+  const tbody = document.getElementById('threat-table-body');
+  tbody.innerHTML = '';
+  data.forEach(t => {
+    const score = t.likelihood * t.impact;
+    const typeIcons = {
+      'Malware / Ransomware':'fa-virus',
+      'Human Error':'fa-person-falling',
+      'Supply Chain Attack':'fa-link-slash',
+      'Process Failure':'fa-gears',
+      'Insider Threat':'fa-user-secret',
+      'Regulatory / Legal':'fa-gavel'
+    };
+    const icon = typeIcons[t.type] || 'fa-triangle-exclamation';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="risk-id">${t.id}</span></td>
+      <td><span class="threat-source-badge ${t.source==='External'?'ts-external':t.source==='Internal'?'ts-internal':'ts-both'}">${t.source}</span></td>
+      <td><i class="fa-solid ${icon} threat-type-icon" style="color:var(--accent-red)"></i>${t.type}</td>
+      <td style="font-size:12px;color:var(--text-secondary);max-width:160px;">${t.vuln}</td>
+      <td style="font-size:12.5px;font-weight:600;">${t.asset}</td>
+      <td>${getLikelihoodBar(t.likelihood)}</td>
+      <td>${getImpactBar(t.impact)}</td>
+      <td>${getScorePill(score)}</td>
+      <td><span class="risk-id" style="background:var(--accent-purple-light);color:#5B21B6;">${t.linkedRisk}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn view" title="View" onclick="showToast('Viewing ${t.id}…','info')"><i class="fa-solid fa-eye"></i></button>
+          <button class="action-btn edit" title="Edit" onclick="showToast('Editing ${t.id}…','info')"><i class="fa-solid fa-pen"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============ TREATMENT CARDS ============
+function buildTreatmentCards() {
+  const container = document.getElementById('treatment-cards-container');
+  container.innerHTML = '';
+  treatmentData.forEach((t, idx) => {
+    const risk = riskData.find(r => r.id === t.id);
+    const card = document.createElement('div');
+    card.className = 'treatment-card';
+    card.innerHTML = `
+      <div class="treatment-card-header" onclick="toggleTreatment(this)">
+        <span class="risk-id">${t.id}</span>
+        <span style="font-size:14px;font-weight:700;color:var(--text-primary);flex:1;">${t.desc}</span>
+        <span class="treatment-badge ${getTreatClass(t.strategy)}">${t.strategy}</span>
+        <span class="badge ${risk?getRatingBadge(risk.inherent).match(/badge-\w+/)[0]:''}" style="margin-left:8px;">${risk?risk.inherent:'—'}</span>
+        <span style="font-size:12px;color:var(--text-secondary);margin-left:8px;">Owner: <strong>${t.responsible.split('/')[0].trim()}</strong></span>
+        <i class="fa-solid fa-chevron-down chevron"></i>
+      </div>
+      <div class="treatment-card-body">
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-list-check" style="margin-right:4px;color:var(--accent-blue)"></i>Action Plan</label>
+          <p>${t.actions}</p>
+        </div>
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-landmark" style="margin-right:4px;color:var(--accent-purple)"></i>Control Mapping</label>
+          <p>${t.frameworks}</p>
+        </div>
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-chart-line" style="margin-right:4px;color:var(--accent-green)"></i>KPI / Measure</label>
+          <p>${t.kpi}</p>
+          <div class="kpi-bar-wrap" style="margin-top:8px;">
+            <div class="kpi-bar"><div class="kpi-fill" style="width:${t.kpiPct}%"></div></div>
+            <span class="kpi-pct">${t.kpiPct}%</span>
+          </div>
+        </div>
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-calendar" style="margin-right:4px;color:var(--accent-amber)"></i>Timeline</label>
+          <p>${t.timeline}</p>
+        </div>
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-user-tie" style="margin-right:4px;color:var(--accent-blue)"></i>Responsible</label>
+          <p>${t.responsible}</p>
+        </div>
+        <div class="treatment-field">
+          <label><i class="fa-solid fa-coins" style="margin-right:4px;color:var(--accent-amber)"></i>Cost Estimate</label>
+          <p>${t.cost}</p>
+          <div class="cost-indicator" style="margin-top:6px;">
+            ${getCostDots(t.cost)}
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function getCostDots(level) {
+  const counts = {Low:1,Medium:2,High:3};
+  const n = counts[level]||1;
+  let html='';
+  for(let i=0;i<3;i++) {
+    const filled = i < n;
+    const color = n===1?'var(--accent-green)':n===2?'var(--accent-amber)':'var(--accent-red)';
+    html += `<div class="cost-dot ${filled?'':'empty'}" style="${filled?'background:'+color:''}"></div>`;
+  }
+  return html;
+}
+
+function toggleTreatment(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+let allOpen = false;
+function toggleAllTreatments() {
+  allOpen = !allOpen;
+  document.querySelectorAll('.treatment-card-body').forEach(b => b.classList.toggle('open', allOpen));
+  document.querySelectorAll('.treatment-card .chevron').forEach(c => c.classList.toggle('open', allOpen));
+  document.querySelector('[onclick="toggleAllTreatments()"]').innerHTML = allOpen
+    ? '<i class="fa-solid fa-compress-alt"></i> Collapse All'
+    : '<i class="fa-solid fa-expand-alt"></i> Expand All';
+}
+
+// ============ CALCULATOR ============
+const recMap = {
+  low: {
+    icon:'✅', label:'LOW RISK', bg:'#DCFCE7', col:'#166534', ringBorder:'#22C55E', ringBg:'#F0FDF4',
+    rec:'Risk is acceptable. Monitor annually and document in the risk register. No immediate action required unless conditions deteriorate.'
+  },
+  medium: {
+    icon:'⚠️', label:'MEDIUM RISK', bg:'#FEF3C7', col:'#92400E', ringBorder:'#F59E0B', ringBg:'#FFFBEB',
+    rec:'Implement specific risk controls and assign a risk owner. Schedule quarterly reviews and document mitigation progress. Escalate if conditions worsen.'
+  },
+  high: {
+    icon:'🔴', label:'HIGH RISK', bg:'#FFEDD5', col:'#9A3412', ringBorder:'#F97316', ringBg:'#FFF7ED',
+    rec:'Immediate action plan required. Assign senior owner, implement controls urgently, and review monthly. Report to risk committee at next meeting.'
+  },
+  critical: {
+    icon:'🚨', label:'CRITICAL RISK', bg:'#FEE2E2', col:'#991B1B', ringBorder:'#EF4444', ringBg:'#FFF5F5',
+    rec:'URGENT: Escalate to executive leadership immediately. Halt related processes if necessary. Daily monitoring required. Board notification may be needed.'
+  }
+};
+
+function calcRisk() {
+  const l = +document.getElementById('likelihood-slider').value;
+  const i = +document.getElementById('impact-slider').value;
+  const score = l * i;
+  const rating = getRating(score).toLowerCase();
+  const r = recMap[rating] || recMap.medium;
+
+  document.getElementById('like-val').textContent = l;
+  document.getElementById('impact-val').textContent = i;
+  document.getElementById('result-formula').innerHTML = `${l} × ${i} = <strong style="color:${r.col}">${score}</strong>`;
+  document.getElementById('result-num').textContent = score;
+  document.getElementById('result-num').style.color = r.ringBorder;
+  document.getElementById('result-ring').style.borderColor = r.ringBorder;
+  document.getElementById('result-ring').style.background = r.ringBg;
+
+  const lbl = document.getElementById('result-label');
+  lbl.textContent = `${r.icon} ${r.label}`;
+  lbl.style.background = r.bg;
+  lbl.style.color = r.col;
+
+  document.getElementById('result-rec').innerHTML = `<strong>📋 Recommended Action:</strong> ${r.rec}`;
+
+  // Update slider fill
+  const likeSlider = document.getElementById('likelihood-slider');
+  likeSlider.style.background = `linear-gradient(to right, ${r.ringBorder} 0%, ${r.ringBorder} ${(l-1)*25}%, #E2E8F0 ${(l-1)*25}%)`;
+
+  highlightMiniMatrix(l, i);
+}
+
+function getRating(score) {
+  if(score <= 4) return 'low';
+  if(score <= 9) return 'medium';
+  if(score <= 16) return 'high';
+  return 'critical';
+}
+function getRatingClass(score) {
+  const r = getRating(score);
+  return {low:'success',medium:'warning',high:'warning',critical:'error'}[r];
+}
+function getRatingBadgeClass(score) {
+  const r = getRating(score);
+  return {low:'badge-low',medium:'badge-medium',high:'badge-high',critical:'badge-critical'}[r];
+}
+
+function buildMiniMatrix() {
+  const grid = document.getElementById('mini-ref-matrix');
+  if(!grid) return;
+  // col headers
+  const th0 = document.createElement('div'); th0.textContent=''; grid.appendChild(th0);
+  ['I1','I2','I3','I4','I5'].forEach(l => {
+    const d = document.createElement('div');
+    d.textContent = l;
+    d.style.cssText = 'font-size:9px;font-weight:700;color:var(--text-muted);text-align:center;padding:2px;';
+    grid.appendChild(d);
+  });
+  for(let lk=5;lk>=1;lk--) {
+    const lbl = document.createElement('div');
+    lbl.textContent = `L${lk}`;
+    lbl.style.cssText = 'font-size:9px;font-weight:700;color:var(--text-muted);display:flex;align-items:center;';
+    grid.appendChild(lbl);
+    for(let im=1;im<=5;im++) {
+      const s = lk*im;
+      const cell = document.createElement('div');
+      cell.className = `mini-cell ${getCellColorClass(s)}`;
+      cell.dataset.l = lk; cell.dataset.i = im;
+      cell.title = `L${lk}×I${im}=${s}`;
+      cell.style.cssText = 'border-radius:4px;';
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function highlightMiniMatrix(l, i) {
+  document.querySelectorAll('.mini-cell').forEach(c => {
+    const match = +c.dataset.l === l && +c.dataset.i === i;
+    c.classList.toggle('highlight', match);
+    c.classList.toggle('dim', !match);
+  });
+}
+
+function resetCalc() {
+  document.getElementById('likelihood-slider').value = 3;
+  document.getElementById('impact-slider').value = 3;
+  calcRisk();
+  showToast('Calculator reset to defaults.','info');
+}
+
+function copyScore() {
+  const l = document.getElementById('likelihood-slider').value;
+  const i = document.getElementById('impact-slider').value;
+  const score = l * i;
+  const rating = getRating(score).toUpperCase();
+  navigator.clipboard.writeText(`Risk Score: ${score}/25 — Rating: ${rating} (L:${l} × I:${i})`).then(() => {
+    showToast('Score copied to clipboard!', 'success');
+  });
+}
+
+function logToRegister() {
+  showToast('Risk logged to register for review!', 'success');
+}
+
+// ============ CATEGORY BARS ============
+function buildCategoryBars() {
+  const cats = {Cyber:0,Operational:0,Compliance:0,Financial:0,Strategic:0};
+  riskData.forEach(r => cats[r.cat]++);
+  const max = Math.max(...Object.values(cats));
+  const colors = {
+    Cyber:['var(--accent-blue-light)','var(--accent-blue)'],
+    Operational:['var(--accent-amber-light)','var(--accent-amber)'],
+    Compliance:['var(--accent-purple-light)','var(--accent-purple)'],
+    Financial:['var(--accent-green-light)','var(--accent-green)'],
+    Strategic:['#FEE2E2','#EF4444']
+  };
+  const container = document.getElementById('cat-bars');
+  if(!container) return;
+  let html = '';
+  Object.entries(cats).forEach(([cat,cnt]) => {
+    const pct = (cnt/max*100).toFixed(0);
+    const [bg,fg] = colors[cat]||['#EEE','#666'];
+    html += `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text-secondary);width:80px;">${cat}</span>
+        <div style="flex:1;background:${bg};border-radius:99px;height:20px;position:relative;overflow:hidden;">
+          <div style="width:${pct}%;background:${fg};height:100%;border-radius:99px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width 1s ease;"></div>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:var(--text-primary);min-width:20px;">${cnt}</span>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ============ FILTERS ============
+function filterTable(query) {
+  const q = query.toLowerCase();
+  const filtered = riskData.filter(r =>
+    r.id.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q) ||
+    r.cat.toLowerCase().includes(q) || r.owner.toLowerCase().includes(q) ||
+    r.status.toLowerCase().includes(q)
+  );
+  buildRiskTable(filtered);
+}
+
+function filterByCategory(cat) {
+  const filtered = cat ? riskData.filter(r => r.cat === cat) : riskData;
+  buildRiskTable(filtered);
+}
+
+function filterByRating(rating) {
+  const filtered = rating ? riskData.filter(r => r.inherent === rating) : riskData;
+  buildRiskTable(filtered);
+}
+
+function filterThreats(q) {
+  const qq = q.toLowerCase();
+  const filtered = threatData.filter(t =>
+    t.id.toLowerCase().includes(qq) || t.type.toLowerCase().includes(qq) ||
+    t.asset.toLowerCase().includes(qq) || t.vuln.toLowerCase().includes(qq)
+  );
+  buildThreatTable(filtered);
+}
+
+function filterThreatSource(src) {
+  const filtered = src ? threatData.filter(t => t.source === src) : threatData;
+  buildThreatTable(filtered);
+}
+
+function resetFilters() {
+  document.getElementById('risk-search').value = '';
+  document.querySelectorAll('.filter-select').forEach(s => s.value = '');
+  buildRiskTable(riskData);
+  showToast('Filters cleared.','info');
+}
+
+// ============ TABLE SORT ============
+let sortDir = {};
+function sortTable(col) {
+  sortDir[col] = !sortDir[col];
+  const sorted = [...riskData].sort((a,b) => {
+    const vals = [a.id,a.cat,a.desc,a.inherent,a.likelihood,a.impact,a.score,'',a.residual,a.treatment,a.owner,a.status];
+    const va = vals[col]||'', vb = vals[col];
+    if(typeof va==='number') return sortDir[col] ? va-vb : vb-va;
+    return sortDir[col] ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+  buildRiskTable(sorted);
+  showToast(`Sorted by column ${col+1}`, 'info');
+}
+
+// ============ MODAL ============
+function showRiskModal(r) {
+  if(!r) return;
+  document.getElementById('modal-title').textContent = `${r.id} — ${r.cat} Risk`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-field full"><label>Description</label><span>${r.desc}</span></div>
+      <div class="detail-field"><label>Category</label><span>${getCatBadge(r.cat)}</span></div>
+      <div class="detail-field"><label>Inherent Rating</label><span>${getRatingBadge(r.inherent)}</span></div>
+      <div class="detail-field"><label>Likelihood</label><span>${r.likelihood}/5</span></div>
+      <div class="detail-field"><label>Impact</label><span>${r.impact}/5</span></div>
+      <div class="detail-field"><label>Risk Score</label><span>${getScorePill(r.score)}</span></div>
+      <div class="detail-field full"><label>Controls in Place</label><span>${r.controls}</span></div>
+      <div class="detail-field"><label>Residual Risk</label><span>${getRatingBadge(r.residual)}</span></div>
+      <div class="detail-field"><label>Treatment Decision</label><span><span class="treatment-badge ${getTreatClass(r.treatment)}">${r.treatment}</span></span></div>
+      <div class="detail-field"><label>Risk Owner</label><span>${r.owner}</span></div>
+      <div class="detail-field"><label>Status</label><span>${getStatusBadge(r.status)}</span></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="closeModal();showToast('Navigating to treatment plan…','info')"><i class="fa-solid fa-wand-magic-sparkles"></i> View Treatment Plan</button>
+      <button class="btn btn-outline" onclick="closeModal()"><i class="fa-solid fa-xmark"></i> Close</button>
+    </div>
+  `;
+  document.getElementById('risk-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('risk-modal').classList.remove('open');
+}
+document.getElementById('risk-modal').addEventListener('click', e => {
+  if(e.target === e.currentTarget) closeModal();
+});
+
+// ============ TOAST ============
+function showToast(msg, type='info') {
+  const icons = {success:'fa-circle-check',error:'fa-circle-xmark',warning:'fa-triangle-exclamation',info:'fa-circle-info'};
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<i class="fa-solid ${icons[type]||'fa-circle-info'}"></i> ${msg}`;
+  document.getElementById('toast-container').appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 350);
+  }, 3000);
+}
+
+// ============ EXPORT ============
+function exportCSV() {
+  const headers = ['Risk ID','Category','Description','Inherent Rating','Likelihood','Impact','Score','Controls','Residual Risk','Treatment','Owner','Status'];
+  const rows = riskData.map(r => [r.id,r.cat,`"${r.desc}"`,r.inherent,r.likelihood,r.impact,r.score,`"${r.controls}"`,r.residual,r.treatment,r.owner,r.status]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'GRC_Risk_Register_Q2_2025.csv';
+  a.click();
+  showToast('CSV exported successfully!', 'success');
+}
+
+function printReport() {
+  showToast('Opening print dialog…','info');
+  setTimeout(() => window.print(), 600);
+}
+
+// Keyboard: Escape closes modal
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+</script>
+</body>
+</html>
