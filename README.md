@@ -7,6 +7,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 https://grc.parrysecurity.online/
+<img width="1672" height="941" alt="ChatGPT Image May 14, 2026, 12_00_59 PM" src="https://github.com/user-attachments/assets/4f2286e3-ef9e-4af2-8fc9-8d5390bd8f28" />
 
 ## 📋 Table of Contents
 - [Overview](#overview)
